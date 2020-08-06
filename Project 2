@@ -1,0 +1,303 @@
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+//required for border
+import javax.swing.BorderFactory;
+import javax.swing.border.Border;
+//required for file IO
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.BufferedWriter;
+import java.io.BufferedReader;
+//required for exception
+import java.io.IOException;
+
+//Header panel
+class HeaderPanel extends JPanel{
+   private JLabel header;
+   public HeaderPanel(){
+      	header = new JLabel("Booking Badminton Court");
+      	add(header);
+   }
+}
+
+//Form Panel
+class FormPanel extends JPanel implements ActionListener, ItemListener{
+   //list all UI components for the panel
+   JLabel lbl_name;
+   JTextField name;
+   JLabel lbl_phone;
+   JTextField phone;
+   JLabel lbl_court;
+   JComboBox<String> court;
+   JLabel lbl_hours;
+   JLabel lbl_outcome;
+   JButton b_submit;
+   JButton b_clear;
+   JButton addButton;                             
+   JCheckBox c1;
+   JCheckBox c2;
+   JCheckBox c3;
+   JLabel lbl_output; 
+   JScrollPane jsp;
+   Border border = BorderFactory.createLineBorder(Color.BLACK, 1);
+   
+   //global variable  
+   String output="";
+   String court_selection="";
+   String rb_selection="";
+   String cb_selection="";
+   String filePath="data.txt"; //in the same directory
+      
+   public FormPanel(){   
+      setLayout(new FlowLayout(FlowLayout.LEFT));     
+      
+      lbl_name = new JLabel("Name");
+      lbl_name.setPreferredSize(new Dimension(200, 20));
+      lbl_name.setBorder(border);
+      
+      add(lbl_name);
+      name = new JTextField(20);
+      add(name);
+      
+      lbl_phone = new JLabel("Phone No.");
+      lbl_phone.setPreferredSize(new Dimension(200, 30));
+      add(lbl_phone);
+      phone = new JTextField(11);
+      add(phone);   
+      
+      String[] Court={"[Select]", "court 1", "court 2", "court 3"};
+      
+      lbl_court = new JLabel("Court book");
+      lbl_court.setPreferredSize(new Dimension(200, 20));
+      add(lbl_court);
+      court = new JComboBox<String>(Court);
+      add(court); 
+      
+      //JComboBox action listener
+      court.addActionListener(new ActionListener(){
+         public void actionPerformed(ActionEvent ae){
+            //get selected item
+            court_selection = (String) court.getSelectedItem();
+         }
+      });  
+      
+      lbl_hours = new JLabel("Booking hour");
+      lbl_hours.setPreferredSize(new Dimension(200, 30));
+      add(lbl_hours);
+      
+      //Radio buttons and action listener
+      JRadioButton rb1 = new JRadioButton("1");
+      rb1.addActionListener(this);
+      JRadioButton rb2 = new JRadioButton("2");
+      rb2.addActionListener(this);
+      JRadioButton rb3 = new JRadioButton("3");
+      rb3.addActionListener(this);
+      JRadioButton rb4 = new JRadioButton("4");
+      rb4.addActionListener(this);
+      add(rb1);
+      add(rb2);
+      add(rb3);
+      add(rb4);
+     
+      
+      //define button group
+      ButtonGroup bg = new ButtonGroup();
+      bg.add(rb1);
+      bg.add(rb2);
+      bg.add(rb3);
+      bg.add(rb4);
+      
+      lbl_outcome = new JLabel("Status");
+      lbl_outcome.setPreferredSize(new Dimension(200, 20));
+      add(lbl_outcome);
+      
+      //checkbox and  item listener
+      c1 = new JCheckBox("Student");
+      c1.addItemListener(this);
+      c2 = new JCheckBox("Staff");
+      c2.addItemListener(this);
+      c3 = new JCheckBox("Guest");
+      c3.addItemListener(this);
+      add(c1);
+      add(c2);
+      add(c3);
+      
+      b_submit = new JButton("Submit");
+      add(b_submit);
+      b_clear = new JButton("Clear");
+      add(b_clear);
+      addButton = new JButton("Add");
+      add(addButton);
+      
+      //handle button submit action listener
+      //view the input to output label
+      //and write to file
+      b_submit.addActionListener(new ActionListener(){  
+         public void actionPerformed(ActionEvent e){  
+            //call method              
+            if(printOutput())
+               writeInput();     
+         }  
+      });
+      
+      //handle button clear action listener
+      b_clear.addActionListener(new ActionListener(){  
+         public void actionPerformed(ActionEvent e){  
+            lbl_output.setText("Output");  
+            name.setText("");
+            phone.setText(""); 
+            court.setSelectedIndex(0);
+            bg.clearSelection();
+            c1.setSelected(false);
+            c2.setSelected(false);
+            c3.setSelected(false);
+         }  
+      });
+      
+      addButton.addActionListener(new ActionListener(){  
+         public void actionPerformed(ActionEvent e){
+          name.setText("");
+          phone.setText("");
+          
+          }
+        });
+      
+      lbl_output = new JLabel("Output");
+      lbl_output.setBorder(border);
+      lbl_output.setVerticalAlignment(JLabel.TOP);
+      
+      //add output label to scrollpane
+      jsp = new JScrollPane(lbl_output);
+      jsp.setPreferredSize(new Dimension(410,120));
+      add(jsp);     
+   }
+   
+   //handle radio button selection
+   public void actionPerformed(ActionEvent ae) {
+      rb_selection = ae.getActionCommand();    	   
+   }
+   
+   //handle item listener for checkbox
+   public void itemStateChanged(ItemEvent ie) {
+      JCheckBox check = (JCheckBox)ie.getSource();
+      cb_selection += check.getText() + " ";   
+   }
+   
+   //method to print output to lbl_output
+   public boolean printOutput(){
+      output = "<html>";
+      output += "Thank you for your booking<br><br>"; 
+      output += "Name: " + name.getText() + "<br>";
+      output += "Phone no.: " + phone.getText() + "<br>";
+      if(court_selection.equals("[Select]") || court_selection.equals("")){
+         lbl_output.setText("Court is not selected.");
+         return false;
+      }
+      output += "Court: " + court_selection + "<br>";
+      output += "Hours: " + rb_selection + " hour/s" + "<br>";
+      output += "Status: " + cb_selection + "<br>";
+      output += "</html>";          
+      lbl_output.setText(output);
+      jsp.getViewport().revalidate();
+      return true;
+    }
+    
+    //write to file
+    public void writeInput(){
+      File file = new File(filePath);
+		FileWriter fr = null;
+		BufferedWriter br = null;
+		PrintWriter pr = null;
+      
+      String input = name.getText() + ", " + phone.getText() + ", " + court_selection + ", " + rb_selection + ", " + cb_selection;
+      
+      //exception implementation
+		try {
+			// to append to file, you need to initialize FileWriter using below constructor
+			fr = new FileWriter(file, true);
+			br = new BufferedWriter(fr);
+			pr = new PrintWriter(br);
+			pr.println(input);
+		} catch (IOException e) {			
+         lbl_output.setText(e.toString());
+		} finally {
+			try {
+				pr.close();
+				br.close();
+				fr.close();
+			} catch (IOException e) {
+				lbl_output.setText(e.toString());
+			}
+		}
+    }
+}
+
+class MenuActionListener implements ActionListener {
+   FormPanel fp;
+   //receive FormPanel class to this constructor
+   public MenuActionListener(FormPanel p){
+      fp = p;
+   }
+   
+   public void actionPerformed(ActionEvent e) {
+      BufferedReader reader;
+	   try {
+			reader = new BufferedReader(new FileReader(fp.filePath));
+			String line = reader.readLine();
+         String output="<html>";
+			while (line != null) {
+				output += line + "<br>";
+				// read next line
+				line = reader.readLine();
+			}
+         output += "<br>";
+         fp.lbl_output.setText(output);
+			reader.close();
+		} catch (IOException io) {
+			fp.lbl_output.setText(io.toString());
+		}
+
+  }
+}
+
+//run the application using this main
+public class BookingBadminton {  
+   public static void main(String[] 	args) {  
+      JFrame f = new JFrame("Booking");
+      f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+      //load panels
+      HeaderPanel h = new 	HeaderPanel();
+      HeaderPanel h2 = new 	HeaderPanel();
+      FormPanel fp = new FormPanel();
+      
+      JMenuBar mb = new JMenuBar(); 
+      // create a menu 
+      JMenu x = new JMenu("Menu"); 
+      
+      // create menuitems 
+      JMenuItem m1 = new JMenuItem("View Data"); 
+      // attach listener and send FormPanel class
+      m1.addActionListener(new MenuActionListener(fp));
+      
+      JMenuItem m2 = new JMenuItem("Exit");  
+      m2.addActionListener((event) -> System.exit(0));
+      // add menu items to menu 
+      x.add(m1); 
+      x.add(m2);
+     
+      // add menu to menu bar 
+      mb.add(x); 
+      // add menubar to frame 
+      f.setJMenuBar(mb);  
+               
+      //add panels to frame       
+      f.add(h,BorderLayout.NORTH);
+      f.add(fp, BorderLayout.CENTER);
+      f.setSize(460,400);
+      f.setVisible(true);
+   }  
+}
